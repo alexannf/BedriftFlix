@@ -8,9 +8,6 @@ public class BedriftFlix {
 
     /*
 
-    Som en del av evaluering for en sommerjobb fikk jeg i oppgave å løse følgende oppgave.
-    Jeg har valgt å endre noen småting i oppgaven etter hensyn til bedriften som hadde oppgaven.
-
     Du skal lage registeret for kunder og produkter i et system for streaming-tjenesten "BedriftFlix".
     Koden du skriver skal brukes av andre utviklere, som skal lage andre deler av systemet
     (f.eks. brukergrensesnittet og selve streamingen).
@@ -59,152 +56,107 @@ public class BedriftFlix {
 
     Lag en metode som tar IDene for en serie og en kunde, og returnerer interessevekten serien har for den kunden.
     Lag en metode som returnerer den serien i systemet som har høyest total interessevekt.
+
+    Tilbakemelding:
+    - Bruk en enum for å representere serietyper.
+    - Bra bruk av exception for feilhåndtering.
+    - Hvis metoder ikke gjør noe pga en sjekk, husk å rapportere til omkringliggende kode at noe gikk galt -
+    gjerne vha exceptions. Ikke bare "feil stille", slik. feks leggTilKunde kan gjøre.
+    - Comparable-interfacet skal brukes til å definere den naturlige ordningen av objektene av en klasse.
+    Det er vanskelig å argumentere for at tittel er den "naturlige" ordningen til en serie,
+    det er mange andre kandidater for sortering også. Derfor burde det heller vært brukt comparators for sortering her.
+    Ta gjerne en titt på den nye enkle syntaksen for sortering vha comparators, med Comparator.comparing og ::-syntaks.
+    - Vurder HashMap som alternativ til lister som datastruktur i BedriftFlix-klassen.
+    - Jeg anbefaler at du setter deg inn i programmering med streams og lambdaer.
+    - Jeg anbefaler at du setter deg inn i enhetstesting vha JUnit. Greit nok med main-testing i denne oppgaven,
+    men faktisk enhetstesting er noe du vil få bruk for.
+    - java.util.Date er utdatert i dag, ta en titt på klassene i java.time-pakken.
+    - Ta en titt på UUID (både konseptet og java-klassen ved samme navn) for ID-generering.
      */
 
-    private List<Serie> serier = new ArrayList<>();
-    private List<Kunde> kunder = new ArrayList<>();
-    public static final List<String> serieTyper = Stream.of(
-            "Drama", "Humor", "Krim", "Animasjon", "Dokumentar", "Gameshow", "Talkshow", "Reality").collect(
-            Collectors.toList());
 
-    // tar inn en String og sjekker om det er en gyldig serietype
-    public static void sjekkSerieType(String serietype) {
-        if (!serieTyper.contains(serietype)) {
-            throw new IllegalArgumentException(serietype + " er ikke et gyldig navn på en serietype");
-        }
-    }
+    private Map<UUID,Serie> serier = new HashMap<>();
+    private Map<UUID,Kunde> kunder = new HashMap<>();
 
+
+    // Oppgave: Lag en metode for å registrere en ny kunde
     public void leggTilKunde(Kunde kunde){
-        if(!kunder.contains(kunde)) {
-            this.kunder.add(kunde);
-        }
+        UUID kundeID = UUID.randomUUID();
+        kunder.put(kundeID, kunde);
     }
 
+    // Oppgave: Lag en metode for å registrere en ny kunde
+    public void leggTilKunde(String fornavn, String etternavn, int alder, String email, String passord){
+        UUID kundeID = UUID.randomUUID();
+        Kunde kunde = new Kunde(fornavn, etternavn, alder, email, passord);
+        kunder.put(kundeID, kunde);
+    }
+
+
+    // Oppgave: Lag en metode for å registrere en ny serie
     public void leggTilSerie(Serie serie){
-        if(!serier.contains(serie)) {
-            this.serier.add(serie);
-        }
+        UUID serieID = UUID.randomUUID();
+        serier.put(serieID, serie);
     }
 
-    public Kunde getKunde(int kundeID) {
-        for (Kunde kunde : kunder) {
-            if (kunde.getKundeID() == kundeID) {
-                return kunde;
-            }
-        }
-        throw new IllegalArgumentException("Det finnes ingen kunde med følgende kundeID: " + kundeID);
+    // Oppgave: Lag en metode for å registrere en ny serie
+    public void leggTilSerie(String tittel, Serietyper... serietyper){
+        UUID serieID = UUID.randomUUID();
+        Serie serie = new Serie(tittel, serietyper);
+        serier.put(serieID, serie);
     }
 
-    public Serie getSerie(int serieID) {
-        for (Serie serie : serier) {
-            if (serie.getSerieID() == serieID) {
-                return serie;
-            }
+    // Oppgave: Lag en metode som returnerer en kunde basert på kundens ID.
+    public Kunde getKunde(UUID kundeID) {
+        if(!kunder.containsKey(kundeID)){
+            throw new IllegalArgumentException(kundeID  + "er ikke en gyldig kundeID");
         }
-        throw new IllegalArgumentException("Det finnes ingen serie med følgende serieID: " + serieID);
+        return kunder.get(kundeID);
     }
 
+    public Serie getSerie(UUID serieID) {
+        if(!serier.containsKey(serieID)){
+            throw new IllegalArgumentException(serieID  + "er ikke en gyldig serieID");
+        }
+        return serier.get(serieID);
+    }
+    /*
+
+    // Oppgave: Lag en metode som returnerer alle kunder som er interessert i en gitt serie, basert på seriens ID.
+    // TODO: skrive test, lage med streams
     public List<Kunde> getInteresserteKunder(Serie serie) {
-        List<Kunde> interesserteKunder = new ArrayList<>();
-        for (Kunde kunde : kunder) {
-            if (kunde.erInteressert(serie)) {
-                interesserteKunder.add(kunde);
-            }
-        }
-        return interesserteKunder;
+
     }
 
+    // Oppgave: Lag en metode som returnerer alle serier som har en gitt serietype, sortert alfabetisk på tittel.
+    // TODO: skrive test, lage med streams
     public List<Serie> getSerieAvSerietype(String serietype) {
-        List<Serie> ønskedeserier = new ArrayList<>();
-        for (Serie serie : serier) {
-            if (serie.erAvSerietype(serietype)) {
-                ønskedeserier.add(serie);
-            }
-        }
-        Collections.sort(ønskedeserier);
-        return ønskedeserier;
+
     }
 
+    // Oppgave: Lag en metode som returnerer alle kunder som ble registrert mellom to datoer. (Trenger ikke sorteres.)
+    // TODO: skrive test, lage med streams
     public List<Kunde> getKunderFraTilDato(Date fraDato, Date tilDato) {
-        List<Kunde> relevanteKunder = new ArrayList<>();
-        for (Kunde kunde : kunder) {
-            if ((!kunde.getRegisteringsdato().before(fraDato)) && (!kunde.getRegisteringsdato().after(tilDato))) {
-                relevanteKunder.add(kunde);
-            }
-        }
-        return relevanteKunder;
+
     }
 
-    public int getInteresseVekt(int kundeID, int serieID) {
-        Kunde kunde = this.getKunde(kundeID);
-        Serie serie = this.getSerie(serieID);
-        int vekt = 0;
-        for (String serietype : kunde.getSerieInteresser()) {
-            if (serie.erAvSerietype(serietype)) {
-                vekt++;
-            }
-        }
-        return vekt;
+    // Oppgave: Lag en metode som tar IDene for en serie og en kunde,
+    // og returnerer interessevekten serien har for den kunden.
+    // TODO: skrive test, lage med streams
+    public int getInteresseVekt(UUID kundeID, UUID serieID) {
+
     }
 
+    // Oppgave: Lag en metode som returnerer den serien i systemet som har høyest total interessevekt.
+    // TODO: skrive test, lage med streams
     public Serie getMestPopulærSerie() {
-        int høyesteScore = 0;
-        Serie mestPopulærSerie = null;
-        for (Serie serie : serier) {
-            int vekt = 0;
-            for (Kunde kunde : kunder) {
-                vekt += getInteresseVekt(kunde.getKundeID(), serie.getSerieID());
-            }
-            if (vekt >= høyesteScore) {
-                høyesteScore = vekt;
-                mestPopulærSerie = serie;
-            }
-        }
-        return mestPopulærSerie;
+
     }
 
+
+     */
     public static void main(String[] args) {
-        BedriftFlix bedflix= new BedriftFlix();
-        Kunde alexander = new Kunde("Alexander", "Fredheim", 25, "alexannf@stud.ntnu.no", "123");
-        Kunde sindre = new Kunde("Sindre", "Sivertsen", 23, "a@b.c", "alexerkul");
-        Kunde amalie = new Kunde("Amalie", "Henni", 22, "ds", "ada");
-        Serie billions = new Serie("Billions", "Drama");
-        Serie himym = new Serie("How I Met Your Mother", "Drama", "Humor");
-        Serie exonthebeach = new Serie("Ex On The Beach", "Reality");
-        Serie planetearth = new Serie("Planet Earth", "Dokumentar");
-        Serie rickandmorty = new Serie("Rick & Morty", "Animasjon", "Humor");
-        bedflix.leggTilKunde(alexander);
-        bedflix.leggTilKunde(sindre);
-        bedflix.leggTilKunde(amalie);
-        bedflix.leggTilSerie(billions);
-        bedflix.leggTilSerie(himym);
-        bedflix.leggTilSerie(exonthebeach);
-        bedflix.leggTilSerie(planetearth);
-        bedflix.leggTilSerie(rickandmorty);
 
-        alexander.leggTilSerieInteresse("Drama");
-        System.out.println(bedflix.getInteresseVekt(alexander.getKundeID(),himym.getSerieID()));
-        alexander.leggTilSerieInteresse("Humor");
-        System.out.println(bedflix.getInteresseVekt(alexander.getKundeID(),himym.getSerieID()));
-
-        amalie.leggTilSerieInteresse("Reality");
-        amalie.leggTilSerieInteresse("Dokumentar");
-        sindre.leggTilSerieInteresse("Dokumentar");
-        sindre.leggTilSerieInteresse("Drama");
-
-        System.out.println(bedflix.getInteresserteKunder(billions));
-        System.out.println(bedflix.getInteresserteKunder(planetearth));
-
-        System.out.println(bedflix.getMestPopulærSerie());
-        alexander.fjernSerieType("Drama");
-        System.out.println(bedflix.getMestPopulærSerie());
-
-        System.out.println(bedflix.getSerieAvSerietype("Humor"));
-        System.out.println(bedflix.getSerieAvSerietype("Drama"));
-
-        System.out.println(alexander.getKundeID());
-        System.out.println(sindre.getKundeID());
-        System.out.println(amalie.getKundeID());
 
 
 

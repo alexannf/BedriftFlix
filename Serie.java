@@ -3,63 +3,50 @@ package bedrift;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Serie implements Comparable<Serie> {
+public class Serie{
 
-    static int idCounter = 0;
-    private int id;
-    private List<String> serietyper = new ArrayList<>();
+    private List<Serietyper> serietyper = new ArrayList<>();
     private String tittel;
 
-    public Serie(String tittel, String... serietyper){
+    // utløser IllegalArgumentException for initsialisering uten serietype(r)
+    public Serie(String tittel, Serietyper... serietyper){
         if(serietyper.length == 0) {
-            throw new IllegalArgumentException("Serie må ha minst en serietype");
+            throw new IllegalArgumentException(tittel + " må ha minst en serietype");
         }
-        for(String serietype:serietyper){
-            BedriftFlix.sjekkSerieType(serietype);
+        for(Serietyper serietype:serietyper){
             this.serietyper.add(serietype);
         }
         this.tittel = tittel;
-        this.id = idCounter;
-        idCounter++;
     }
 
-    public void leggTilSerieType(String type){
-        BedriftFlix.sjekkSerieType(type);
-        if(!serietyper.contains(type)){
-            this.serietyper.add(type);
+    // Oppgave: Lag passende metoder for å legge til og/eller fjerne serietyper på en serie.
+
+    // utløser IllegalArgumentException om serietypen vi legger til allerede er registrert på objektet
+    public void leggTilSerieType(Serietyper serietype){
+        if(serietyper.contains(serietype)){
+            throw new IllegalArgumentException(serietype + " er allerede lagt til for " + tittel);
         }
-        // kan utløse IllegalArgumentException men vil ikke krasje programmet, ingen skade gjort
+        this.serietyper.add(serietype);
     }
 
-    public void fjernSerieType(String type){
-        if(serietyper.contains(type)){
+    // utløser IllegalArgumentException om serietypen vi prøver å slette ikke finnes eller hvis vi kun har én serietype
+    public void fjernSerieType(Serietyper serietype){
+        if(!serietyper.contains(serietype)){
+            throw new IllegalArgumentException(serietype + " er ikke en serietype for " + tittel);
+        }
+        else{
             if(serietyper.size()==1){
                 throw new IllegalStateException("Du kan ikke fjerne den eneste serietypen");
             }
-            else{
-                serietyper.remove(type);
-            }
+            serietyper.remove(serietype);
         }
-        // kan utløse IllegalArgumentException men vil ikke krasje programmet, ingen skade gjort
     }
 
     public String getTittel(){
         return this.tittel;
     }
 
-    public int getSerieID(){
-        return this.id;
-    }
-
-    public boolean erAvSerietype(String serietype){
-        BedriftFlix.sjekkSerieType(serietype);
-        if(serietyper.contains(serietype)){
-            return true;
-        }
-        return false;
-    }
-
-    public List<String> getSerieTyper(){
+    public List<Serietyper> getSerieTyper(){
         return this.serietyper;
     }
 
@@ -68,8 +55,4 @@ public class Serie implements Comparable<Serie> {
         return this.tittel;
     }
 
-    @Override
-    public int compareTo(Serie o) {
-        return this.getTittel().compareTo(o.getTittel());
-    }
 }

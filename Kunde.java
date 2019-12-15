@@ -1,16 +1,15 @@
 package bedrift;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class Kunde {
 
     private String fornavn, etternavn, email, passord;
-    private int alder, kid;
-    private List<String> interesser = new ArrayList<>();
-    private static int kidCounter = 0;
-    private Date registeringsdato;
+    private int alder;
+    private List<Serietyper> interesser = new ArrayList<>();
+    private LocalDateTime registeringsdato;
 
 
     public Kunde(String fornavn, String etternavn, int alder, String email, String passord){
@@ -19,9 +18,18 @@ public class Kunde {
         this.alder = alder;
         this.email = email;
         this.passord = passord;
-        this.kid = kidCounter;
-        kidCounter++;
-        this.registeringsdato = new Date();
+        this.registeringsdato = LocalDateTime.now();
+
+    }
+
+    public Kunde(String fornavn, String etternavn, int alder, String email, String passord, Serietyper ... serietyper){
+        this.interesser = List.of(serietyper);
+        this.fornavn = fornavn;
+        this.etternavn = etternavn;
+        this.alder = alder;
+        this.email = email;
+        this.passord = passord;
+        this.registeringsdato = LocalDateTime.now();
 
     }
 
@@ -41,39 +49,36 @@ public class Kunde {
         return alder;
     }
 
-    public int getKundeID(){
-        return this.kid;
-    }
-
-    public Date getRegisteringsdato(){
+    public LocalDateTime getRegisteringsdato(){
         return this.registeringsdato;
     }
 
-    public void leggTilSerieInteresse(String type){
-        BedriftFlix.sjekkSerieType(type);
-        if(!interesser.contains(type)){
-            this.interesser.add(type);
+    // utløser IllegalArgumentException om serie interessen allerede finnes for denne kunden
+    public void leggTilSerieInteresse(Serietyper serietype){
+        if(interesser.contains(serietype)){
+            throw new IllegalArgumentException(serietype + " er allerede en serieInteresse hos " + this);
         }
-        // kan utløse IllegalArgumentException men vil ikke krasje programmet, ingen skade gjort
+        this.interesser.add(serietype);
     }
 
-    public void fjernSerieType(String type){
-        if(interesser.contains(type)) {
-            interesser.remove(type);
-        }
-        // kan utløse IllegalArgumentException men vil ikke krasje programmet, ingen skade gjort
-    }
-
-    public boolean erInteressert(Serie serie){
-        for(String serietype:serie.getSerieTyper()){
-            if((this.getSerieInteresser().contains(serietype))){
-                return true;
+    public void leggTilSerieInteresser(Serietyper ... serietyper){
+        for(Serietyper serietype : serietyper){
+            if(interesser.contains(serietype)){
+                throw new IllegalArgumentException(serietype + " er allerede en serieInteresse hos " + this);
             }
+            this.interesser.add(serietype);
         }
-        return false;
     }
 
-    public List<String> getSerieInteresser(){
+    // utløser IllegalArgumentException om serie-interessen ikke finnes for denne kunden
+    public void fjernSerieInteresse(Serietyper serietype){
+        if(!interesser.contains(serietype)) {
+            throw new IllegalArgumentException(serietype + " er ikke en serieInteresse hos " + this);
+        }
+        interesser.remove(serietype);
+    }
+
+    public List<Serietyper> getSerieInteresser(){
         return this.interesser;
     }
 
@@ -82,4 +87,14 @@ public class Kunde {
     public String toString(){
         return this.fornavn + " " + this.etternavn;
     }
+
+    public static void main(String[] args) {
+        Kunde alex = new Kunde(
+                "Alexander", "Fredheim", 25, "alexannf@stud.ntnu.no",
+                "123", Serietyper.Humor, Serietyper.Dokumentar, Serietyper.Talkshow);
+
+    System.out.println(alex.getSerieInteresser());
+
+    }
+
 }
