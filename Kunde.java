@@ -2,14 +2,17 @@ package bedrift;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.UUID;
 
 public class Kunde {
 
     private String fornavn, etternavn, email, passord;
     private int alder;
-    private List<Serietyper> interesser = new ArrayList<>();
+    private Collection<Serietyper> interesser = new ArrayList<>();
     private LocalDateTime registeringsdato;
+    private UUID kundeID;
 
 
     public Kunde(String fornavn, String etternavn, int alder, String email, String passord){
@@ -23,7 +26,7 @@ public class Kunde {
     }
 
     public Kunde(String fornavn, String etternavn, int alder, String email, String passord, Serietyper ... serietyper){
-        this.interesser = List.of(serietyper);
+        this.interesser = Arrays.asList(serietyper);
         this.fornavn = fornavn;
         this.etternavn = etternavn;
         this.alder = alder;
@@ -53,6 +56,14 @@ public class Kunde {
         return this.registeringsdato;
     }
 
+    public void setKundeID(UUID kundeID){
+        this.kundeID = kundeID;
+    }
+
+    public UUID getKundeID(){
+        return this.kundeID;
+    }
+
     // utløser IllegalArgumentException om serie interessen allerede finnes for denne kunden
     public void leggTilSerieInteresse(Serietyper serietype){
         if(interesser.contains(serietype)){
@@ -78,7 +89,7 @@ public class Kunde {
         interesser.remove(serietype);
     }
 
-    public List<Serietyper> getSerieInteresser(){
+    public Collection<Serietyper> getSerieInteresser(){
         return this.interesser;
     }
 
@@ -87,14 +98,4 @@ public class Kunde {
     public String toString(){
         return this.fornavn + " " + this.etternavn;
     }
-
-    public static void main(String[] args) {
-        Kunde alex = new Kunde(
-                "Alexander", "Fredheim", 25, "alexannf@stud.ntnu.no",
-                "123", Serietyper.Humor, Serietyper.Dokumentar, Serietyper.Talkshow);
-
-    System.out.println(alex.getSerieInteresser());
-
-    }
-
 }

@@ -1,12 +1,14 @@
 package bedrift;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.UUID;
 
 public class Serie{
 
-    private List<Serietyper> serietyper = new ArrayList<>();
+    private Collection<Serietyper> serietyper = new ArrayList<>();
     private String tittel;
+    private UUID serieID;
 
     // utløser IllegalArgumentException for initsialisering uten serietype(r)
     public Serie(String tittel, Serietyper... serietyper){
@@ -46,8 +48,16 @@ public class Serie{
         return this.tittel;
     }
 
-    public List<Serietyper> getSerieTyper(){
+    public Collection<Serietyper> getSerieTyper(){
         return this.serietyper;
+    }
+
+    public void setSerieID(UUID serieID){
+        this.serieID = serieID;
+    }
+
+    public UUID getSerieID(){
+        return this.serieID;
     }
 
     @Override

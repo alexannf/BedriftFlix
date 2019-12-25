@@ -1,8 +1,10 @@
 package bedrift;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.chrono.ChronoLocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class BedriftFlix {
 
@@ -24,6 +26,7 @@ public class BedriftFlix {
     Du må også lagre hvilke serietyper kunden er interessert i.
     Det er OK å ha kunder som ikke er interessert i noen serietyper.
 
+
     Funksjonalitetskrav 1: Registrering
 
     Lag en metode for å registrere en ny serie. Ta alt utenom ID som parameter, ID'en bør genereres av systemet.
@@ -36,6 +39,7 @@ public class BedriftFlix {
     Lag passende metoder for å legge til og/eller fjerne serietyper en kunde er interessert i.
     Det er helt ok å ikke være interessert i noen serietyper.
 
+
     Funksjonalitetskrav 2: Uthenting
 
     Lag en metode som returnerer en kunde basert på kundens ID.
@@ -44,6 +48,7 @@ public class BedriftFlix {
     Lag en metode som returnerer alle serier som har en gitt serietype
     (uavhengig av hvilke andre serietyper serien har), sortert alfabetisk på tittel.
     Lag en metode som returnerer alle kunder som ble registrert mellom to datoer. (Trenger ikke sorteres.)
+
 
     Funksjonalitetskrav 3: Interesserapport
 
@@ -56,24 +61,7 @@ public class BedriftFlix {
 
     Lag en metode som tar IDene for en serie og en kunde, og returnerer interessevekten serien har for den kunden.
     Lag en metode som returnerer den serien i systemet som har høyest total interessevekt.
-
-    Tilbakemelding:
-    - Bruk en enum for å representere serietyper.
-    - Bra bruk av exception for feilhåndtering.
-    - Hvis metoder ikke gjør noe pga en sjekk, husk å rapportere til omkringliggende kode at noe gikk galt -
-    gjerne vha exceptions. Ikke bare "feil stille", slik. feks leggTilKunde kan gjøre.
-    - Comparable-interfacet skal brukes til å definere den naturlige ordningen av objektene av en klasse.
-    Det er vanskelig å argumentere for at tittel er den "naturlige" ordningen til en serie,
-    det er mange andre kandidater for sortering også. Derfor burde det heller vært brukt comparators for sortering her.
-    Ta gjerne en titt på den nye enkle syntaksen for sortering vha comparators, med Comparator.comparing og ::-syntaks.
-    - Vurder HashMap som alternativ til lister som datastruktur i BedriftFlix-klassen.
-    - Jeg anbefaler at du setter deg inn i programmering med streams og lambdaer.
-    - Jeg anbefaler at du setter deg inn i enhetstesting vha JUnit. Greit nok med main-testing i denne oppgaven,
-    men faktisk enhetstesting er noe du vil få bruk for.
-    - java.util.Date er utdatert i dag, ta en titt på klassene i java.time-pakken.
-    - Ta en titt på UUID (både konseptet og java-klassen ved samme navn) for ID-generering.
      */
-
 
     private Map<UUID,Serie> serier = new HashMap<>();
     private Map<UUID,Kunde> kunder = new HashMap<>();
@@ -82,27 +70,42 @@ public class BedriftFlix {
     // Oppgave: Lag en metode for å registrere en ny kunde
     public void leggTilKunde(Kunde kunde){
         UUID kundeID = UUID.randomUUID();
+        kunde.setKundeID(kundeID);
         kunder.put(kundeID, kunde);
+    }
+
+    public void leggTilKunder(Kunde ... kunder){
+        for(Kunde kunde : kunder){
+            leggTilKunde(kunde);
+        }
     }
 
     // Oppgave: Lag en metode for å registrere en ny kunde
     public void leggTilKunde(String fornavn, String etternavn, int alder, String email, String passord){
         UUID kundeID = UUID.randomUUID();
         Kunde kunde = new Kunde(fornavn, etternavn, alder, email, passord);
+        kunde.setKundeID(kundeID);
         kunder.put(kundeID, kunde);
     }
-
 
     // Oppgave: Lag en metode for å registrere en ny serie
     public void leggTilSerie(Serie serie){
         UUID serieID = UUID.randomUUID();
+        serie.setSerieID(serieID);
         serier.put(serieID, serie);
+    }
+
+    public void leggTilSerier(Serie ... serier){
+        for(Serie serie : serier){
+            leggTilSerie(serie);
+        }
     }
 
     // Oppgave: Lag en metode for å registrere en ny serie
     public void leggTilSerie(String tittel, Serietyper... serietyper){
         UUID serieID = UUID.randomUUID();
         Serie serie = new Serie(tittel, serietyper);
+        serie.setSerieID(serieID);
         serier.put(serieID, serie);
     }
 
@@ -120,52 +123,57 @@ public class BedriftFlix {
         }
         return serier.get(serieID);
     }
-    /*
 
     // Oppgave: Lag en metode som returnerer alle kunder som er interessert i en gitt serie, basert på seriens ID.
-    // TODO: skrive test, lage med streams
-    public List<Kunde> getInteresserteKunder(Serie serie) {
+    public Collection<Kunde> getInteresserteKunder(UUID serieID) {
+        Serie serie = this.serier.get(serieID);
+        Collection<Serietyper> serietyper = serie.getSerieTyper();
+        Collection<Kunde> allekunder = kunder.values();
 
+        // går gjennom alle kunder og filtrerer ut de som ikke har noen serieinteresser som matcher seriens serietyper
+        return allekunder.stream().sorted(Comparator.comparing(Kunde::toString)).filter(
+                k -> !Collections.disjoint(serietyper, k.getSerieInteresser())).collect(Collectors.toList());
     }
 
     // Oppgave: Lag en metode som returnerer alle serier som har en gitt serietype, sortert alfabetisk på tittel.
-    // TODO: skrive test, lage med streams
-    public List<Serie> getSerieAvSerietype(String serietype) {
+    public Collection<Serie> getSerierAvSerietype(Serietyper serietype) {
+        Collection<Serie> alleserier = serier.values();
+        return alleserier.stream().sorted(Comparator.comparing(Serie::getTittel)).
+                filter(s -> s.getSerieTyper().contains(serietype)).collect(Collectors.toList());
 
     }
 
     // Oppgave: Lag en metode som returnerer alle kunder som ble registrert mellom to datoer. (Trenger ikke sorteres.)
-    // TODO: skrive test, lage med streams
-    public List<Kunde> getKunderFraTilDato(Date fraDato, Date tilDato) {
-
+    public List<Kunde> getKunderFraTilDato(LocalDate fraDato, LocalDate tilDato) {
+        Collection<Kunde> allekunder = kunder.values();
+        return allekunder.stream().filter(k -> k.getRegisteringsdato().isAfter(ChronoLocalDateTime.from(fraDato))).
+                filter(k -> k.getRegisteringsdato().isBefore(ChronoLocalDateTime.from(tilDato))).
+                collect(Collectors.toList());
     }
 
     // Oppgave: Lag en metode som tar IDene for en serie og en kunde,
     // og returnerer interessevekten serien har for den kunden.
-    // TODO: skrive test, lage med streams
     public int getInteresseVekt(UUID kundeID, UUID serieID) {
+        Collection<Serietyper> kundeInteresser = kunder.get(kundeID).getSerieInteresser();
+        Collection<Serietyper> serietyper = serier.get(serieID).getSerieTyper();
+        return (int) kundeInteresser.stream().filter(kundeint -> serietyper.contains(kundeint)).count();
 
     }
 
     // Oppgave: Lag en metode som returnerer den serien i systemet som har høyest total interessevekt.
-    // TODO: skrive test, lage med streams
     public Serie getMestPopulærSerie() {
-
-    }
-
-
-     */
-    public static void main(String[] args) {
-
-
-
-
-
-
-
-
-
-
+        Serie mestPopSerie = null;
+        int hoyesteScore = 0;
+        for(UUID serieID: serier.keySet()){
+            int score = 0;
+            score += this.getInteresserteKunder(serieID).
+                    stream().mapToInt(k-> getInteresseVekt(k.getKundeID(), serieID)).sum();
+            if(score > hoyesteScore){
+                hoyesteScore = score;
+                mestPopSerie = serier.get(serieID);
+            }
+        }
+        return mestPopSerie;
     }
 }
 
